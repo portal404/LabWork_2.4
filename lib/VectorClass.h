@@ -1,6 +1,5 @@
 #pragma once
 #include <iostream>
-#include <new>
 #include <math.h>
 
 using namespace std;
@@ -148,7 +147,7 @@ template<class T>
 inline void TVector<T>::SetLen(int len_)
 {
   if (len == len_) return;
-  if (len_ < 0) throw - 1;
+  if (len_ < 0) throw -1;
   else if (len_ == 0)
   {
     if (vector != nullptr) delete[] vector;

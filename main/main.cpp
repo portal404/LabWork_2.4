@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <VectorClass.h>
+#include <MatrixClass.h>
 
 
 using namespace std;
