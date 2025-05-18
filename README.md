@@ -1,4 +1,4 @@
-# LabWork_2.3
-Third lab of the second semester
+# LabWork_2.4
+Fourth lab of the second semester
 
-Kinda works, needs gauss and interface
+Kinda works, no interface
