@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <math.h>
+#define _CRT_SECURE_NO_WARNINGS
 
 using namespace std;
 
@@ -21,47 +22,51 @@ public:
     TVector(TVector&& obj);
     ~TVector();
 
-    virtual int GetLen();
-    virtual void GetVector(T** vector_);
+    int GetLen() const;
+    void GetVector(T** vector_);
 
-    virtual void SetLen(int len_);
-    virtual void SetVector(T* vector_, int len_);
+    void SetLen(int len_);
+    void SetVector(T* vector_, int len_);
 
-    virtual TVector operator+(const TVector<T>& obj);
-    virtual TVector operator-(const TVector<T>& obj);
-    virtual T operator*(const TVector<T>& obj);
-    virtual TVector operator*(const T& mul);
+    TVector operator+(const TVector<T>& obj);
+    TVector operator-(const TVector<T>& obj);
+    T operator*(const TVector<T>& obj);
+    TVector operator*(const T& mul);
 
     TVector<T> operator/(const TVector<T>& div) const;
 
-    virtual TVector& operator=(const TVector<T>& obj);
-    virtual TVector& operator=(TVector<T>&& obj);
-    virtual bool operator==(const TVector<T>& obj);
+    TVector& operator=(const TVector<T>& obj);
+    TVector& operator=(TVector<T>&& obj);
+    bool operator==(const TVector<T>& obj) const;
 
-    virtual T& operator[](int index) const;
+    T& operator[](int index);
+    const T& operator[](int index) const;
+
 
     template <class T1>
     friend ostream& operator<<(ostream& o, TVector<T1>& v);
     template <class T1>
     friend istream& operator>>(istream& i, TVector<T1>& v);
 
-    virtual void SortBubble();
-    virtual void SortQuick();
-    virtual void SortInsertion();
-    virtual int Partition(int low, int high);
-    virtual void QuickSortHelper(int low, int high);
+    /* Doesn't work if you create a matrix, works fine otherwise
+     *
+    void SortBubble();
+    void SortQuick();
+    void SortInsertion();
+    int Partition(int low, int high);
+    void QuickSortHelper(int low, int high);
 
+    T Normalization();
+    T FirstNorm();
+    T SecondNorm();
+    T InfinityNorm();
+    T HolderNorm(double p);
+     */
 
+    TVectorIterator<T> begin();
+    TVectorIterator<T> end();
 
-    virtual T Normalization();
-    virtual T FirstNorm();
-    virtual T SecondNorm();
-    virtual T InfinityNorm();
-
-    virtual TVectorIterator<T> begin();
-    virtual TVectorIterator<T> end();
-
-    virtual void Rand();
+    void Rand();
 };
 
 
@@ -132,7 +137,7 @@ inline TVector<T>::~TVector()
 }
 
 template<class T>
-inline int TVector<T>::GetLen()
+inline int TVector<T>::GetLen() const
 {
   return len;
 }
@@ -143,9 +148,11 @@ inline void TVector<T>::GetVector(T** vector_)
   *vector_ = vector;
 }
 
+
 template<class T>
 inline void TVector<T>::SetLen(int len_)
 {
+
   if (len == len_) return;
   if (len_ < 0) throw -1;
   else if (len_ == 0)
@@ -157,7 +164,7 @@ inline void TVector<T>::SetLen(int len_)
   }
 
   T* newVector = new T[len_];
-  for (int i = 0; i < std::min(len, len_); i++) newVector[i] = vector[i];
+  for (int i = 0; i < min(len, len_); i++) newVector[i] = vector[i];
   if (vector != nullptr) delete[] vector;
 
   vector = newVector;
@@ -173,8 +180,6 @@ inline void TVector<T>::SetVector(T* vector_, int len_)
   vector = vector_;
   len = len_;
 }
-
-
 
 template<class T>
 inline TVector<T> TVector<T>::operator+(const TVector<T>& obj)
@@ -216,10 +221,10 @@ inline T TVector<T>::operator*(const TVector<T>& obj) {
 template<class T>
 inline TVector<T> TVector<T>::operator*(const T& mul)
 {
-  TVector<T> res = len;
-  for (int i = 0; i < len; i++)
+  TVector<T> res(len);
+  for (size_t i = 0; i < len; ++i)
   {
-    res[i] = res[i] * mul;
+    res[i] = (*this)[i] * mul;
   }
   return res;
 }
@@ -228,20 +233,19 @@ template <class T>
 inline TVector<T> TVector<T>::operator/(const TVector<T>& div) const {
   if (len != div.len)
   {
-    throw std::invalid_argument("Length is different");
+    throw invalid_argument("Length is different");
   }
   TVector<T> res(len);
-  for (int i = 0; i < len; ++i)
-  {
-    res.vector[i] = this->vector[i] / div.vector[i];
-  }
+  for (int i = 0; i < len; ++i) res.vector[i] = this->vector[i] / div.vector[i];
   return res;
 }
 
 template<class T>
 inline TVector<T>& TVector<T>::operator=(const TVector<T>& obj)
 {
-  if (this == &obj) return *this;
+  if (this == &obj)
+    return *this;
+
   if (len != obj.len)
   {
     delete[] vector;
@@ -250,14 +254,20 @@ inline TVector<T>& TVector<T>::operator=(const TVector<T>& obj)
   len = obj.len;
   for (int i = 0; i < len; i++)
     vector[i] = obj.vector[i];
+
   return *this;
 }
+
 
 template<class T>
 inline TVector<T>& TVector<T>::operator=(TVector<T>&& obj)
 {
-  if (this == &obj) return *this;
-  if (vector != nullptr) delete[] vector;
+  if (this == &obj)
+    return *this;
+
+  if (vector != nullptr)
+    delete[] vector;
+
   vector = obj.vector;
   len = obj.len;
   obj.vector = nullptr;
@@ -266,7 +276,7 @@ inline TVector<T>& TVector<T>::operator=(TVector<T>&& obj)
 }
 
 template<class T>
-inline bool TVector<T>::operator==(const TVector<T>& obj)
+inline bool TVector<T>::operator==(const TVector<T>& obj) const
 {
   if (len != obj.len) return false;
   for (int i = 0; i < len; ++i)
@@ -280,22 +290,31 @@ inline bool TVector<T>::operator==(const TVector<T>& obj)
 }
 
 template<class T>
-inline T& TVector<T>::operator[](int index) const
-{
-  if (vector == nullptr) throw -1;
-  if (index < 0 || index > len) throw -1;
+inline T& TVector<T>::operator[](int index) {
+  if (vector == nullptr || index < 0 || index >= len)
+    throw std::out_of_range("Index out of bounds");
   return vector[index];
 }
 
 template<class T>
+inline const T& TVector<T>::operator[](int index) const {
+  if (vector == nullptr || index < 0 || index >= len)
+    throw std::out_of_range("Index out of bounds");
+  return vector[index];
+}
+
+
+
+/*
+template<class T>
 inline void TVector<T>::SortBubble()
 {
-  int temp;
+  T temp;
   for (int s = 0; s < len; ++s)
   {
     for (int j = 0; j < len - 1; ++j)
     {
-      if (vector[j] > vector[j + 1])
+      if ((vector[j]) > (vector[j + 1]))
       {
         temp = vector[j];
         vector[j] = vector[j + 1];
@@ -312,6 +331,7 @@ inline void TVector<T>::SortQuick()
   QuickSortHelper(0, len - 1);
 }
 
+
 template<class T>
 inline void TVector<T>::SortInsertion() {
   for (int i = 1; i < len; ++i) {
@@ -326,6 +346,7 @@ inline void TVector<T>::SortInsertion() {
 
   }
 }
+
 template<class T>
 inline void TVector<T>::QuickSortHelper(int low, int high)
 {
@@ -344,40 +365,29 @@ inline int TVector<T>::Partition(int low, int high) {
   for (int j = low; j <= high - 1; j++) {
     if (vector[j] <= pivot) {
       i++;
-      std::swap(vector[i], vector[j]);
+      swap(vector[i], vector[j]);
     }
   }
-  std::swap(vector[i + 1], vector[high]);
+  swap(vector[i + 1], vector[high]);
   return i + 1;
 }
 
-
+// tnx Roman
 template<class T>
 inline T TVector<T>::Normalization()
 {
-  double norm = 0.0;
+  T l = SecondNorm();
   for (int i = 0; i < len; ++i)
-  {
-    norm += pow(vector[i], 2);
-  }
-  double newNorm = sqrt(norm);
-  if (newNorm == 0.0)
-  {
-    printf("Can't normalize vector! Second norm is 0!");
-    return 1;
-  }
-  for (int i = 0; i < len; ++i){
-    vector[i] /= norm;
-  }
-  return 0;
+    (*this)[i] = l;
+  return l;
 }
-
+/*
 template<class T>
 inline T TVector<T>::FirstNorm()
 {
   int norm = 0;
-  for (int i = 0; i < len; ++i)
-  {
+  int i = 0;
+  for (int i = 0; i < len; ++i) {
     norm += abs(vector[i]);
   }
   return norm;
@@ -387,8 +397,8 @@ template<class T>
 inline T TVector<T>::SecondNorm()
 {
   double norm = 0.0;
-  for (int i = 0; i < len; ++i)
-  {
+
+  for (int i = 0; i < len; ++i) {
     norm += pow(vector[i], 2);
   }
   return sqrt(norm);
@@ -397,12 +407,26 @@ inline T TVector<T>::SecondNorm()
 template<class T>
 inline T TVector<T>::InfinityNorm()
 {
-  int x = 0;
-  for (int i = 0; i < len; ++i)
-    if (abs(vector[i]) > x)
-      x = abs(vector[i]);
-  return x;
+  int ans;
+  for (int i = 0; i < len; ++i) {
+    if (abs(vector[i]) > ans) {
+      ans = abs(vector[i]);
+    }
+  }
+  return ans;
 }
+
+template<class T>
+inline T TVector<T>::HolderNorm(double p)
+{
+  double res = 0;
+  double power = 1 / (double) p;
+  for (int i = 0; i < len; ++i)
+    res += pow((vector[i]), p);
+  res = pow(res, power);
+  return res;
+}
+*/
 
 template<class T>
 inline TVectorIterator<T> TVector<T>::begin()
@@ -421,7 +445,6 @@ inline void TVector<T>::Rand()
 {
   for (int i = 0; i < len; i++) vector[i] = rand();
 }
-
 template<class T1>
 inline ostream& operator<<(ostream& o, TVector<T1>& v)
 {

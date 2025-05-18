@@ -1,5 +1,10 @@
 #pragma once
 #include "VectorClass.h"
+#include <math.h>
+#include <fstream>
+
+#define _CRT_SECURE_NO_WARNINGS
+
 
 using namespace std;
 template<class T>
@@ -11,40 +16,259 @@ public:
   TMatrix(int l, int h);
   TMatrix(const TMatrix& obj);
   TMatrix(TMatrix&& obj);
-  virtual ~TMatrix();
+  ~TMatrix();
 
+  int GetRows() const;
+  int GetColumns() const;
 
-  virtual void SetLen(int len_);
-  virtual void SetMatrix(T* matrix_, int l, int h);
+  TMatrix<T> operator+(const TMatrix<T>& obj);
+  TMatrix<T> operator-(const TMatrix<T>& obj);
+  TMatrix<T> operator*(const TMatrix<T>& obj);
+  TMatrix<T> operator*(const T mul);
+  TMatrix<T> operator/(const T div);
 
-  virtual TMatrix<T> operator+(const TMatrix<T>& obj);
-  virtual TMatrix<T> operator-(const TMatrix<T>& obj);
-  virtual TMatrix<T> operator*(const TMatrix<T>& obj);
-  virtual TMatrix<T> operator/(const TMatrix<T>& obj);
-  virtual TMatrix<T> operator*(const T mul);
-  virtual TMatrix<T> operator/(const T div);
-
-  virtual TMatrix<T>& operator=(const TMatrix<T>& obj);
-  virtual TMatrix<T>& operator=(TMatrix<T>&& obj);
-  virtual bool operator==(const TMatrix<T>& obj);
-
-  virtual TVector<T>& operator[](int index) const;
+  TMatrix<T>& operator=(const TMatrix<T>& obj);
+  TMatrix<T>& operator=(TMatrix<T>&& obj);
+  bool operator==(const TMatrix<T>& obj);
 
   template <class O>
   friend ostream& operator<<(ostream& o, TMatrix<O>& v);
   template <class I>
   friend istream& operator>>(istream& i, TMatrix<I>& v);
 
-
-  virtual T Normalization(T obj);
-  virtual T FirstNorm(T obj);
-  virtual T SecondNorm(T obj);
-  virtual T InfinityNorm(T obj);
-  virtual T HelderNorm(T obj);
-
-  virtual void Rand();
+  void RandMatrix();
+  virtual void SaveToFile(const char* path = "./data.txt");
+  virtual void ReadFromFile(const char* path = "./data.txt");
 };
 
+template<class T>
+inline TMatrix<T>::TMatrix() : TVector<TVector<T>>::TVector() {}
 
+template<class T>
+inline TMatrix<T>::TMatrix(int rows, int columns) : TVector<TVector<T>>::TVector(rows)
+{
+  for (int i = 0; i < rows; ++i)
+  {
+    (*this)[i] = TVector<T>(columns);
+  }
+}
 
+template<class T>
+TMatrix<T>::TMatrix(const TMatrix<T> &obj) : TVector<TVector<T>>::TVector(obj.GetLen())
+{
+  int rows = obj.GetLen();
+  int columns = obj.GetColumns();
+  for (int i = 0; i < rows; i++)
+  {
+    this->vector[i] = TVector<T>(columns);
+    for (int j = 0; j < columns; j++)
+    {
+      this->vector[i][j] = obj.vector[i][j];
+    }
+  }
+}
 
+template<class T>
+TMatrix<T>::TMatrix(TMatrix<T> &&obj)
+{
+  this->len = obj.len;
+  this->vector = obj.vector;
+  this->isNew = obj.isNew;
+  obj.len = 0;
+  obj.vector = nullptr;
+  obj.isNew = false;
+}
+
+template<class T>
+inline TMatrix<T>::~TMatrix() {}
+
+template<class T>
+inline int TMatrix<T>::GetRows() const
+{
+  return (*this).GetLen();
+}
+
+template<class T>
+inline int TMatrix<T>::GetColumns() const
+{
+  if (GetRows() == 0) return 0;
+  return (*this)[0].GetLen();
+}
+
+template<class T>
+inline TMatrix<T> TMatrix<T>::operator+(const TMatrix& obj)
+{
+  int row = GetRows();
+  int col = GetColumns();
+  if (row != obj.GetRows() || col != obj.GetColumns()) throw "Can't plus";
+  TMatrix<T> res(row, col);
+  for (int i = 0; i < row; ++i)
+    for (int j = 0; j < col; ++j) res.vector[i][j] = (*this)[i][j] + obj[i][j];
+  return res;
+}
+
+template<class T>
+inline TMatrix<T> TMatrix<T>::operator-(const TMatrix& obj)
+{
+  int row = GetRows();
+  int col = GetColumns();
+  if (row != obj.GetRows() || col != obj.GetColumns()) throw "Can't minus";
+  TMatrix<T> res(row, col);
+  for (int i = 0; i < row; ++i)
+    for (int j = 0; j < col; ++j) res.vector[i][j] = (*this)[i][j] - obj[i][j];
+  return res;
+}
+
+// Умножение на число
+template<class T>
+inline TMatrix<T> TMatrix<T>::operator*(const T mul)
+{
+  int row = GetRows();
+  int col = GetColumns();
+  TMatrix<T> res(row, col);
+  if (mul == 0) return res;
+  for (int i = 0; i < row; ++i)
+    for (int j = 0; j < col; ++j) res.vector[i][j] = (*this)[i][j] * mul;
+  return res;
+}
+
+// Деление на число
+template<class T>
+inline TMatrix<T> TMatrix<T>::operator/(const T div)
+{
+  int row = GetRows();
+  int col = GetColumns();
+  if (div == 0) throw "Cannot divide by zero!!!";
+  TMatrix<T> res(row, col);
+  for (int i = 0; i < row; ++i)
+    for (int j = 0; j < col; ++j) res.vector[i][j] = (*this)[i][j] / div;
+  return res;
+}
+
+// Умножение матриц
+template<class T>
+inline TMatrix<T> TMatrix<T>::operator*(const TMatrix& obj)
+{
+  int row = GetRows();
+  int col = GetColumns();
+  if (row != obj.GetColumns()) throw "Cannot multiply";
+  TMatrix<T> res(row, col);
+  for (int i = 0; i < row; ++i)
+    for (int j = 0; j < obj.GetColumns(); ++j)
+    {
+      res.vector[i][j] = 0;
+      for (int k = 0; k < col; ++k) res.vector[i][j] += (*this)[i][k] * obj[k][j];
+    }
+  return res;
+}
+
+// Присваивает только матрицы одинакогого размера
+template<class T>
+inline TMatrix<T>& TMatrix<T>::operator=(const TMatrix<T>& obj)
+{
+  int row = GetRows();
+  int col = GetColumns();
+  if (row != obj.GetRows() || col != obj.GetColumns()) throw "Cannot equal those";
+  for (int i = 0; i < row; ++i)
+    for (int j = 0; j < col; ++j) (*this)[i][j] = obj[i][j];
+  return *this;
+}
+// Посмотреть где отличия
+template<class T>
+inline TMatrix<T>& TMatrix<T>::operator=(TMatrix<T>&& obj)
+{
+  *this = obj;
+  return *this;
+}
+
+template<class T>
+inline bool TMatrix<T>::operator==(const TMatrix<T>& obj)
+{
+  int row = GetRows();
+  int col = GetColumns();
+  if (row != obj.GetRows() || col != obj.GetColumns()) throw "Cannot equal";
+  bool flag = true;
+  for (int i = 0; i < row; ++i)
+    for (int j = 0; j < col; ++j) if ((*this)[i][j] != obj[i][j]) flag = false;
+  return flag;
+}
+// Output
+template <class O>
+inline ostream& operator<<(ostream& o, TMatrix<O>& p)
+{
+  int row = p.GetRows();
+  int col = p.GetColumns();
+  for (int i = 0; i < row; ++i)
+  {
+    for (int j = 0; j < col; ++j)
+    {
+      o << p[i][j] << "\t";
+    }
+    o << endl;
+  }
+  return o;
+}
+// Input
+template <class I>
+inline istream& operator>>(istream& is, TMatrix<I>& p)
+{
+  int row = p.GetRows();
+  int col = p.GetColumns();
+  for (int i = 0; i < row; i++)
+  {
+    for (int j = 0; j < col; j++)
+    {
+      cout << "a[" << i << "][" << j << "]: ";
+      is >> p[i][j];
+    }
+  }
+  return is;
+}
+
+template<class T>
+inline void TMatrix<T>::RandMatrix()
+{
+  int size1 = (*this).GetRows();
+  int size2 = (*this).GetColumns();
+  for (int i = 0; i < size1; ++i)
+  {
+    for (int j = 0; i < size2; ++j)
+      (*this)[i][j] = rand();
+  }
+}
+
+template<class T>
+inline void TMatrix<T>::SaveToFile(const char* path)
+{
+  ofstream FileLoc(path);
+  if (!FileLoc.is_open()) throw "File dosen't work";
+  if (FileLoc.is_open())
+  {
+    FileLoc << GetRows() << "\n";
+    FileLoc << GetColumns() << "\n";
+    for (int i = 0; i < GetRows(); ++i)
+    {
+      for (int j = 0; j < GetColumns(); ++j)
+        FileLoc << (*this)[i][j] << "\n";
+    }
+  }
+  FileLoc.close();
+}
+
+template<class T>
+inline void TMatrix<T>::ReadFromFile(const char* path)
+{
+  ifstream FileLoc(path);
+  if (!FileLoc.is_open()) throw "File dosen't work";
+  if (FileLoc.is_open())
+  {
+    int row = 0, col = 0;
+    FileLoc >> row;
+    FileLoc >> col;
+    if (row != GetRows() || col != GetColumns()) throw "Cannot read, the size is different";
+    for (int i = 0; i < row; ++i)
+      for (int j = 0; j < col; ++j)
+        FileLoc >> (*this)[i][j];
+  }
+  FileLoc.close();
+}
