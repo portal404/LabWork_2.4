@@ -332,7 +332,7 @@ inline void TMatrix<T>::Gauss(TVector<double> &equals)
   TVector<double> x(n);
   double max;
   int index;
-  const double accuracy = pow(10,-5);
+  const double accuracy = pow(10,-10);
   double temp;
   int k = 0;
   while (k < n) // к - идет по диагонали матрицы слева сверху
@@ -351,6 +351,7 @@ inline void TMatrix<T>::Gauss(TVector<double> &equals)
     {
       // нулевой столбец
       cout << "No solution, det(A) = 0, zero column index: " << index << endl;
+      throw "plz fix your matrix";
     }
 
     // перенос строки с самым большим элементом наверх
@@ -379,11 +380,29 @@ inline void TMatrix<T>::Gauss(TVector<double> &equals)
     k++;
   }
 
-  // обратная подстановка
+  // Обратная подстановка
   for (k = n - 1; k > -1; k--)
   {
     x[k] = equals[k];
     for (int i = 0; i < k; i++)
       equals[i] -= (*this)[i][k] * x[k];
   }
+
+  // Обнуление элементов выше диагонали
+  for (k = n - 1; k >= 0; k--)
+  {
+    for (int i = 0; i < k; i++)
+    {
+      double factor = (*this)[i][k]; // Элемент над диагональю
+      x[i] -= factor * x[k]; // замена правой части
+      (*this)[i][k] = 0.0; // Обнуление
+    }
+  }
+
+  // Копируем результат из x в equals (x уже содержит решение)
+  for (int i = 0; i < n; i++) {
+    equals[i] = x[i];
+  }
+
+  (*this).PrintSystem(equals);
 }
