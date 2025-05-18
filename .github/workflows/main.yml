@@ -40,4 +40,4 @@ jobs:
           make
           echo make complete
           ./main/BLASApp
-          ./test/BLASTest.cpp
+          ./maintest/BLASTest.cpp
