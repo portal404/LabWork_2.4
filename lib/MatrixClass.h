@@ -39,6 +39,12 @@ public:
   void RandMatrix();
   virtual void SaveToFile(const char* path = "./data.txt");
   virtual void ReadFromFile(const char* path = "./data.txt");
+
+  void PrintSystem(TVector<double> & rpart);
+  void Gauss(TVector<double> &equals);
+
+  int ValueCount(const T looking_for); // Количество вхождений доп номер 2
+  TMatrix AllOccurrences(const T value); // Все вхождения значения доп номер 3
 };
 
 template<class T>
@@ -202,7 +208,7 @@ inline ostream& operator<<(ostream& o, TMatrix<O>& p)
   {
     for (int j = 0; j < col; ++j)
     {
-      o << p[i][j] << "\t";
+      o << p[i][j] << " ";
     }
     o << endl;
   }
@@ -218,8 +224,9 @@ inline istream& operator>>(istream& is, TMatrix<I>& p)
   {
     for (int j = 0; j < col; j++)
     {
-      cout << "a[" << i << "][" << j << "]: ";
+      cout <<"a[" << i << "][" << j << "]:  ";
       is >> p[i][j];
+      cout << endl;
     }
   }
   return is;
@@ -271,4 +278,112 @@ inline void TMatrix<T>::ReadFromFile(const char* path)
         FileLoc >> (*this)[i][j];
   }
   FileLoc.close();
+}
+
+template <class T>
+inline int TMatrix<T>::ValueCount(const T looking_for)
+{
+  int row = GetRows();
+  int col = GetColumns();
+  int ans = 0;
+  for (int i = 0; i < row; ++i)
+    for (int j = 0; j < col; ++j) if ((*this)[i][j] == looking_for) ans++;
+  return ans;
+}
+
+template <class T>
+inline TMatrix<T> TMatrix<T>::AllOccurrences(const T value)
+{
+  int row = GetRows();
+  int col = GetColumns();
+  int count = ValueCount(value);
+  TMatrix<T> ans(count, 2);
+  int n = 0;
+  for (int i = 0; i < row; ++i)
+    for (int j = 0; j < col; ++j)
+      if ((*this)[i][j] == value)
+      {
+        ans[n][0] = i;
+        ans[n++][1] = j;
+      }
+  return ans;
+}
+
+template <class T>
+inline void TMatrix<T>::PrintSystem(TVector<double> & rpart)
+{
+  int n = rpart.GetLen();
+  if (n != GetRows()) throw "Length doesn't match!";
+  for (int i = 0; i < n; ++i)
+  {
+    for (int j = 0; j < n; ++j)
+    {
+      cout << (*this)[i][j] << "*x" << j+1;
+      if (j < n - 1) cout << " + ";
+    }
+    cout << " = " << rpart[i] << endl;
+    }
+}
+
+template <class T>
+inline void TMatrix<T>::Gauss(TVector<double> &equals)
+{
+  int n = equals.GetLen();
+  TVector<double> x(n);
+  double max;
+  int index;
+  const double accuracy = pow(10,-5);
+  double temp;
+  int k = 0;
+  while (k < n) // к - идет по диагонали матрицы слева сверху
+  {
+    // Поиск строки с максимальным элементом в нынешнем столбце
+    max = abs((*this)[k][k]);
+    index = k;
+    for (int i = k + 1; i < n; i++) if (abs((*this)[i][k]) > max)
+      {
+        max = abs((*this)[i][k]);
+        index = i; // индекс строки с макс. эелеметном
+      }
+
+    // Перестановка строк
+    if (max < accuracy)
+    {
+      // нулевой столбец
+      cout << "No solution, det(A) = 0, zero column index: " << index << endl;
+    }
+
+    // перенос строки с самым большим элементом наверх
+    for (int j = 0; j < n; j++)
+    {
+      temp = (*this)[k][j];
+      (*this)[k][j] = (*this)[index][j];
+      (*this)[index][j] = temp;
+    }
+    // перенос значений:
+    temp = equals[k];
+    equals[k] = equals[index];
+    equals[index] = temp;
+
+    // Решение матрицы
+    for (int i = k; i < n; i++)
+    {
+      temp = (*this)[i][k];
+      if (abs(temp) < accuracy) continue; // упустить погрешность
+      for (int j = k; j < n; j++) (*this)[i][j] /= temp;
+      equals[i] /= temp;
+      if (i == k)  continue; // пропустить себя же
+      for (int j = 0; j < n; j++) (*this)[i][j] -= (*this)[k][j];
+      equals[i] -= equals[k];
+    }
+    k++;
+  }
+
+  // обратная подстановка
+  for (k = n - 1; k > -1; k--)
+  {
+    x[k] = equals[k];
+    for (int i = 0; i < k; i++)
+      equals[i] -= (*this)[i][k] * x[k];
+  }
 }

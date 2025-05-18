@@ -127,7 +127,6 @@ EXPECT_EQ(v[2], 3);
 v[1] = 5;
 EXPECT_EQ(v[1], 5);
 }
-/*
 
 TEST(TVectorTest, BubbleSort) {
 TVector<int> v(5);
@@ -184,4 +183,3 @@ v[0] = 3.0; v[1] = 4.0;
 EXPECT_NEAR(v.HolderNorm(2.0), 5.0, 1e-6);
 }
 
-*/

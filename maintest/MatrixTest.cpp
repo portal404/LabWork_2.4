@@ -198,7 +198,6 @@ TEST(TMatrixFileIOTest, EmptyMatrix) {
   // Сохраняем пустую матрицу
   emptyMatrix.SaveToFile(testFileName);
 
-  // Проверяем содержимое файла
   std::ifstream testFile(testFileName);
   int rows, cols;
   testFile >> rows >> cols;
@@ -206,20 +205,57 @@ TEST(TMatrixFileIOTest, EmptyMatrix) {
   EXPECT_EQ(0, cols);
   testFile.close();
 
-  // Пытаемся прочитать
   TMatrix<int> loadedMatrix;
   loadedMatrix.ReadFromFile(testFileName);
   EXPECT_EQ(0, loadedMatrix.GetRows());
   EXPECT_EQ(0, loadedMatrix.GetColumns());
 
-  // Удаляем тестовый файл
   remove(testFileName);
 }
 
-// Тест для проверки обработки несуществующего файла
 TEST(TMatrixFileIOTest, NonExistentFile) {
   TMatrix<int> matrix(2, 2);
   const char* nonExistentFile = "non_existent_file.txt";
 
   EXPECT_THROW(matrix.ReadFromFile(nonExistentFile), const char*);
+}
+
+
+// Взял у Ромы
+TEST(TMatrixTest, ValueCountMethod)
+{
+  TMatrix<int> matrix(3, 3);
+  matrix[0][0] = 1; matrix[0][1] = 2; matrix[0][2] = 3;
+  matrix[1][0] = 2; matrix[1][1] = 3; matrix[1][2] = 2;
+  matrix[2][0] = 3; matrix[2][1] = 2; matrix[2][2] = 1;
+
+  EXPECT_EQ(2, matrix.ValueCount(1));
+  EXPECT_EQ(4, matrix.ValueCount(2));
+  EXPECT_EQ(0, matrix.ValueCount(5));
+}
+
+// Взял у Ромы
+TEST(TMatrixTest, AllOccursMethod)
+{
+  TMatrix<int> matrix(3, 3);
+  matrix[0][0] = 1; matrix[0][1] = 2; matrix[0][2] = 3;
+  matrix[1][0] = 2; matrix[1][1] = 3; matrix[1][2] = 2;
+  matrix[2][0] = 3; matrix[2][1] = 2; matrix[2][2] = 1;
+
+  TMatrix<int> result = matrix.AllOccurrences(2);
+  EXPECT_EQ(4, result.GetRows());
+  EXPECT_EQ(2, result.GetColumns());
+
+  bool found1 = false, found2 = false, found3 = false, found4 = false;
+  for (int i = 0; i < result.GetRows(); ++i)
+  {
+    if (result[i][0] == 0 && result[i][1] == 1) found1 = true;
+    if (result[i][0] == 1 && result[i][1] == 0) found2 = true;
+    if (result[i][0] == 1 && result[i][1] == 2) found3 = true;
+    if (result[i][0] == 2 && result[i][1] == 1) found4 = true;
+  }
+  EXPECT_TRUE(found1);
+  EXPECT_TRUE(found2);
+  EXPECT_TRUE(found3);
+  EXPECT_TRUE(found4);
 }

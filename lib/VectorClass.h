@@ -48,20 +48,16 @@ public:
     template <class T1>
     friend istream& operator>>(istream& i, TVector<T1>& v);
 
-    /* Doesn't work if you create a matrix, works fine otherwise
-     *
-    void SortBubble();
+    void SortBubble(); // Доп задание 1
     void SortQuick();
     void SortInsertion();
     int Partition(int low, int high);
     void QuickSortHelper(int low, int high);
-
     T Normalization();
     T FirstNorm();
     T SecondNorm();
     T InfinityNorm();
     T HolderNorm(double p);
-     */
 
     TVectorIterator<T> begin();
     TVectorIterator<T> end();
@@ -292,20 +288,20 @@ inline bool TVector<T>::operator==(const TVector<T>& obj) const
 template<class T>
 inline T& TVector<T>::operator[](int index) {
   if (vector == nullptr || index < 0 || index >= len)
-    throw std::out_of_range("Index out of bounds");
+    throw out_of_range("Index out of bounds");
   return vector[index];
 }
 
 template<class T>
 inline const T& TVector<T>::operator[](int index) const {
   if (vector == nullptr || index < 0 || index >= len)
-    throw std::out_of_range("Index out of bounds");
+    throw out_of_range("Index out of bounds");
   return vector[index];
 }
 
 
 
-/*
+
 template<class T>
 inline void TVector<T>::SortBubble()
 {
@@ -381,7 +377,7 @@ inline T TVector<T>::Normalization()
     (*this)[i] = l;
   return l;
 }
-/*
+
 template<class T>
 inline T TVector<T>::FirstNorm()
 {
@@ -407,7 +403,7 @@ inline T TVector<T>::SecondNorm()
 template<class T>
 inline T TVector<T>::InfinityNorm()
 {
-  int ans;
+  T ans;
   for (int i = 0; i < len; ++i) {
     if (abs(vector[i]) > ans) {
       ans = abs(vector[i]);
@@ -426,7 +422,6 @@ inline T TVector<T>::HolderNorm(double p)
   res = pow(res, power);
   return res;
 }
-*/
 
 template<class T>
 inline TVectorIterator<T> TVector<T>::begin()
@@ -456,6 +451,11 @@ inline ostream& operator<<(ostream& o, TVector<T1>& v)
 template<class T1>
 inline istream& operator>>(istream& i, TVector<T1>& v)
 {
+  for (int j = 0; j < v.len; ++j)
+  {
+    cout << "a[" << j << "] element: ";
+    i >> v[i];
+  }
   return i;
 }
 
