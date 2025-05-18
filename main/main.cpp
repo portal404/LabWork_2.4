@@ -7,6 +7,7 @@ using namespace std;
 
 int main()
 {
+  /*
   setlocale(0, "");
   TMatrix<int> A(2,2);
   TVector<double> B(2);
@@ -18,5 +19,6 @@ int main()
   A.PrintSystem(B);
   A.Gauss(B);
   A.PrintSystem(B);
+   */
   return 0;
 }
