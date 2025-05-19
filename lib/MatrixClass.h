@@ -12,7 +12,6 @@ class TMatrix : public TVector<TVector<T>>
 {
 public:
   TMatrix();
-  TMatrix(int len_);
   TMatrix(int l, int h);
   TMatrix(const TMatrix& obj);
   TMatrix(TMatrix&& obj);
@@ -337,7 +336,7 @@ inline void TMatrix<T>::Gauss(TVector<double> &equals)
   int k = 0;
   while (k < n) // к - идет по диагонали матрицы слева сверху
   {
-    // Поиск строки с максимальным элементом в нынешнем столбце
+    // Поиск индекса с максимальным элементом в нынешнем столбце
     max = abs((*this)[k][k]);
     index = k;
     for (int i = k + 1; i < n; i++) if (abs((*this)[i][k]) > max)

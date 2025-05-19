@@ -46,7 +46,7 @@ public:
     template <class T1>
     friend ostream& operator<<(ostream& o, TVector<T1>& v);
     template <class T1>
-    friend istream& operator>>(istream& i, TVector<T1>& v);
+    friend istream& operator>>(istream& is, TVector<T1>& v);
 
     void SortBubble(); // Доп задание 1
     void SortQuick();
@@ -449,14 +449,14 @@ inline ostream& operator<<(ostream& o, TVector<T1>& v)
 }
 
 template<class T1>
-inline istream& operator>>(istream& i, TVector<T1>& v)
+inline istream& operator>>(istream& is, TVector<T1>& v)
 {
   for (int j = 0; j < v.len; ++j)
   {
     cout << "a[" << j << "] element: ";
-    i >> v[i];
+    is >> v[j];
   }
-  return i;
+  return is;
 }
 
 template<class T>
